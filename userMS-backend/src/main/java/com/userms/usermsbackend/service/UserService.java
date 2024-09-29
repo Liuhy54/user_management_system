@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpSession;
  */
 public interface UserService extends IService<User> {
 
+
     /**
      * 用户注册
      *
@@ -32,5 +33,13 @@ public interface UserService extends IService<User> {
      * @param request
      * @return 脱敏后的用户信息
      */
-    User doLogin(String userAccount, String userPassword ,HttpServletRequest request);
+    User userLogin(String userAccount, String userPassword ,HttpServletRequest request);
+
+    /**
+     * 获取安全的用户信息(脱敏)
+     *
+     * @param originUser
+     * @return
+     */
+    User getSafetyUser(User originUser);
 }

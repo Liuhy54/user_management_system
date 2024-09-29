@@ -4,11 +4,16 @@ spring:
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/haiy?useSSL=false
+    url: jdbc:mysql://localhost:3306/haiy?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: root
+  # session 失效时间
+  session:
+    timeout: 1800 # session过期时间，单位为秒，默认30分钟
 server:
   port: 8080
+  servlet:
+    context-path: /api
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
