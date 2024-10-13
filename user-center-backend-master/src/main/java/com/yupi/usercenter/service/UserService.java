@@ -1,19 +1,17 @@
-package com.userms.usermsbackend.service;
+package com.yupi.usercenter.service;
 
-import com.userms.usermsbackend.model.domain.User;
+import com.yupi.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 用户服务
  *
- * @author lhynb54
- * @description 针对表【user(用户)】的数据库操作Service
- * @createDate 2024-09-23 19:12:14
+ * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+ * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 public interface UserService extends IService<User> {
-
 
     /**
      * 用户注册
@@ -21,8 +19,8 @@ public interface UserService extends IService<User> {
      * @param userAccount   用户账户
      * @param userPassword  用户密码
      * @param checkPassword 校验密码
-     * @param planetCode    星球代码
-     * @return 新用户id
+     * @param planetCode    星球编号
+     * @return 新用户 id
      */
     long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
 
@@ -34,18 +32,21 @@ public interface UserService extends IService<User> {
      * @param request
      * @return 脱敏后的用户信息
      */
-    User userLogin(String userAccount, String userPassword ,HttpServletRequest request);
+    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
-     * 获取安全的用户信息(脱敏)
+     * 用户脱敏
      *
      * @param originUser
      * @return
      */
     User getSafetyUser(User originUser);
 
+    // [加入编程导航](https://t.zsxq.com/0emozsIJh) 深耕编程提升【两年半】、国内净值【最高】的编程社群、用心服务【20000+】求学者、帮你自学编程【不走弯路】
+
     /**
      * 用户注销
+     *
      * @param request
      * @return
      */

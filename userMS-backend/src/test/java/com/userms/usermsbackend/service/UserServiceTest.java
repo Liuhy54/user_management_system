@@ -42,36 +42,37 @@ class UserServiceTest {
         String userAccount = "haiy3";
         String userPassword = "";
         String checkPassword = "12345678";
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        String planetCode = "1";
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertEquals(-1, result, "密码为空时应返回-1");
 
         userAccount = "hy";
         userPassword = "12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertEquals(-1, result,"用户名不足4位时应返回-1");
 
         userPassword = "123456";
         checkPassword = "123456";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertEquals(-1, result,"密码不足8位时应返回-1");
 
         userAccount = "haiY2";
         userPassword = "12345678";
         checkPassword = "12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertEquals(-1, result, "用户名重复时应返回-1");
 
         userAccount = "ha iy3";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertEquals(-1, result, "用户名有特殊字符时应返回-1");
 
         userAccount = "HAIY4";
         checkPassword = "123456789";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         Assertions.assertEquals(-1, result, "密码和校验码不一致时应返回-1");
 
         checkPassword = "12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         assertTrue(result > 0);
     }
 }

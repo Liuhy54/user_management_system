@@ -1,28 +1,29 @@
-package com.userms.usermsbackend.service.impl;
-
+package com.yupi.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.userms.usermsbackend.common.ErrorCode;
-import com.userms.usermsbackend.exception.BusinessException;
-import com.userms.usermsbackend.mapper.UserMapper;
-import com.userms.usermsbackend.model.domain.User;
-import com.userms.usermsbackend.service.UserService;
-import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
+import com.yupi.usercenter.common.ErrorCode;
+import com.yupi.usercenter.exception.BusinessException;
+import com.yupi.usercenter.model.domain.User;
+import com.yupi.usercenter.service.UserService;
+import com.yupi.usercenter.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import static com.userms.usermsbackend.contant.UserConstant.USER_LOGIN_STATE;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.yupi.usercenter.contant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户服务实现类
  *
- * @author lhynb54
- * @description 针对表【user(用户)】的数据库操作Service实现
- * @createDate 2024-09-23 19:12:14
+ * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+ * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 @Service
 @Slf4j
@@ -32,112 +33,127 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Resource
     private UserMapper userMapper;
 
+    // https://www.code-nav.cn/
+
     /**
      * 盐值，混淆密码
      */
-    private static final String SALT = "haiy";
+    private static final String SALT = "yupi";
 
-
+    /**
+     * 用户注册
+     *
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
+     * @param checkPassword 校验密码
+     * @param planetCode    星球编号
+     * @return 新用户 id
+     */
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
-        // 1.校验
-        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, planetCode)) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "参数不能为空");
+        // 1. 校验
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        //用户名长度不能小于4
         if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "用户名长度不能小于4");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
         }
-        // 密码长度不能小于8
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "密码长度不能小于8");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
-        // 星球代码长度不能大于5
         if (planetCode.length() > 5) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "星球代码长度不能大于5");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号过长");
         }
         // 账户不能包含特殊字符
-        if (!userAccount.matches("^[a-zA-Z0-9]+$")) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR,"账户不能包含特殊字符");
+        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if (matcher.find()) {
+            return -1;
         }
-        // 密码不能包含特殊字符
-        if (!userPassword.matches("^[a-zA-Z0-9]+$") || !checkPassword.matches("^[a-zA-Z0-9]+$")) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "密码不能包含特殊字符");
-        }
-        // 密码和校验码相同
+        // 密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "密码和校验码不相同");
+            return -1;
         }
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "账户已存在");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
-        // 星球代码不能重复
+        // 星球编号不能重复
         queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("planetCode", planetCode);
         count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "星球代码已存在");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "编号重复");
         }
-        // 2.加密密码
-        String encrytPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        // 3.插入数据
+        // 2. 加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        // 3. 插入数据
         User user = new User();
         user.setUserAccount(userAccount);
-        user.setUserPassword(encrytPassword);
+        user.setUserPassword(encryptPassword);
         user.setPlanetCode(planetCode);
         boolean saveResult = this.save(user);
         if (!saveResult) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败");
+            return -1;
         }
         return user.getId();
-
     }
 
+    // [加入星球](https://www.code-nav.cn/) 从 0 到 1 项目实战，经验拉满！10+ 原创项目手把手教程、7 日项目提升训练营、60+ 编程经验分享直播、1000+ 项目经验笔记
+
+    /**
+     * 用户登录
+     *
+     * @param userAccount  用户账户
+     * @param userPassword 用户密码
+     * @param request
+     * @return 脱敏后的用户信息
+     */
     @Override
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
-        // 1.校验
-        if (StringUtils.isAllBlank(userAccount, userPassword)) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "参数不能为空");
+        // 1. 校验
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+            return null;
         }
         if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "用户名长度不能小于4");
+            return null;
+        }
+        if (userPassword.length() < 8) {
+            return null;
         }
         // 账户不能包含特殊字符
         if (!userAccount.matches("^[a-zA-Z0-9]+$")) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "账户不能包含特殊字符");
+            return null;
         }
         // 密码不能包含特殊字符
         if (!userPassword.matches("^[a-zA-Z0-9]+$")) {
-            throw new BusinessException(ErrorCode.PRAMS_ERROR, "密码不能包含特殊字符");
+            return null;
         }
 
-        // 2.加密密码
-        String encrytPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        // 2. 加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword", encrytPassword);
+        queryWrapper.eq("userPassword", encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
+        // 用户不存在
         if (user == null) {
             log.info("user login failed, userAccount cannot match userPassword");
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+            return null;
         }
-
-        // 3.用户脱敏
+        // 3. 用户脱敏
         User safetyUser = getSafetyUser(user);
-
-        // 4.登录成功，设置session
+        // 4. 记录用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
-
         return safetyUser;
     }
 
     /**
-     * 脱敏用户信息
+     * 用户脱敏
      *
      * @param originUser
      * @return
@@ -163,19 +179,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     * 用户退出登录
+     * 用户注销
      *
      * @param request
-     * @return
      */
     @Override
     public int userLogout(HttpServletRequest request) {
-        //移除登录状态
+        // 移除登录态
         request.getSession().removeAttribute(USER_LOGIN_STATE);
-        throw new BusinessException(ErrorCode.SUCCESS, "退出登录成功");
+        return 1;
     }
+
 }
 
-
-
-
+// [加入我们](https://yupi.icu) 从 0 到 1 项目实战，经验拉满！10+ 原创项目手把手教程、7 日项目提升训练营、1000+ 项目经验笔记、60+ 编程经验分享直播
